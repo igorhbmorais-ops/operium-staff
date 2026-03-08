@@ -1,0 +1,16 @@
+{
+  "name": "Operium Staff",
+  "short_name": "Staff",
+  "description": "Portal do Colaborador — Operium",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
