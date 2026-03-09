@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SecurityProvider, useSecurity } from '@/contexts/SecurityContext';
 import AppLayout from '@/components/AppLayout';
 import Login from '@/pages/Login';
+import PinSetup from '@/pages/PinSetup';
+import PinVerify from '@/pages/PinVerify';
 import Home from '@/pages/Home';
 import Ponto from '@/pages/Ponto';
 import Ferias from '@/pages/Ferias';
@@ -9,6 +12,42 @@ import Recibos from '@/pages/Recibos';
 import Perfil from '@/pages/Perfil';
 import Notificacoes from '@/pages/Notificacoes';
 import { Loader2 } from 'lucide-react';
+
+function SecuredRoutes() {
+  const { checked, config, pinDefinido, pinVerificado } = useSecurity();
+
+  if (!checked) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  // Se exige PIN e ainda não está definido → ecrã de setup
+  if (config?.exigir_pin && !pinDefinido) {
+    return <PinSetup />;
+  }
+
+  // Se exige PIN e ainda não foi verificado nesta sessão → ecrã de verificação
+  if (config?.exigir_pin && !pinVerificado) {
+    return <PinVerify />;
+  }
+
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/ponto" element={<Ponto />} />
+        <Route path="/ferias" element={<Ferias />} />
+        <Route path="/recibos" element={<Recibos />} />
+        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/notificacoes" element={<Notificacoes />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function AppRoutes() {
   const { user, colaborador, loading } = useAuth();
@@ -50,18 +89,11 @@ function AppRoutes() {
     );
   }
 
+  // Colaborador autenticado → gate de segurança
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/ponto" element={<Ponto />} />
-        <Route path="/ferias" element={<Ferias />} />
-        <Route path="/recibos" element={<Recibos />} />
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/notificacoes" element={<Notificacoes />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <SecurityProvider>
+      <SecuredRoutes />
+    </SecurityProvider>
   );
 }
 
