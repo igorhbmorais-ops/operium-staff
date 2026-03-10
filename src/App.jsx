@@ -9,6 +9,8 @@ import Home from '@/pages/Home';
 import Ponto from '@/pages/Ponto';
 import Ferias from '@/pages/Ferias';
 import Recibos from '@/pages/Recibos';
+import Documentos from '@/pages/Documentos';
+import MenuPage from '@/pages/MenuPage';
 import Perfil from '@/pages/Perfil';
 import Notificacoes from '@/pages/Notificacoes';
 import { Loader2 } from 'lucide-react';
@@ -41,6 +43,8 @@ function SecuredRoutes() {
         <Route path="/ponto" element={<Ponto />} />
         <Route path="/ferias" element={<Ferias />} />
         <Route path="/recibos" element={<Recibos />} />
+        <Route path="/documentos" element={<Documentos />} />
+        <Route path="/menu" element={<MenuPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/notificacoes" element={<Notificacoes />} />
       </Route>
