@@ -41,16 +41,11 @@ export default function Perfil() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            {colaborador?.foto_url ? (
-              <img src={colaborador.foto_url} alt="" className="w-16 h-16 rounded-full object-cover" />
-            ) : (
-              <User size={28} className="text-blue-600" />
-            )}
+            <User size={28} className="text-blue-600" />
           </div>
           <div>
             <p className="text-lg font-bold text-gray-900">{colaborador?.nome ?? '—'}</p>
-            <p className="text-sm text-gray-500">{colaborador?.cargo ?? '—'}</p>
-            <p className="text-xs text-gray-400">{colaborador?.departamento ?? ''}</p>
+            <p className="text-sm text-gray-500">{colaborador?.categoria ?? '—'}</p>
           </div>
         </div>
         <div className="mt-4 space-y-2 text-sm">

@@ -53,7 +53,7 @@ export default function Home() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{saudacao}, {primeiroNome}</h1>
-        <p className="text-sm text-gray-500 mt-1">{colaborador?.cargo ?? 'Colaborador'}</p>
+        <p className="text-sm text-gray-500 mt-1">{colaborador?.categoria ?? 'Colaborador'}</p>
       </div>
 
       {/* Quick Actions */}
