@@ -13,6 +13,10 @@ import Documentos from '@/pages/Documentos';
 import MenuPage from '@/pages/MenuPage';
 import Perfil from '@/pages/Perfil';
 import Notificacoes from '@/pages/Notificacoes';
+import Horario from '@/pages/Horario';
+import Despesas from '@/pages/Despesas';
+import Mensagens from '@/pages/Mensagens';
+import Denuncia from '@/pages/Denuncia';
 import { Loader2 } from 'lucide-react';
 
 function SecuredRoutes() {
@@ -47,6 +51,10 @@ function SecuredRoutes() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/notificacoes" element={<Notificacoes />} />
+        <Route path="/horario" element={<Horario />} />
+        <Route path="/despesas" element={<Despesas />} />
+        <Route path="/mensagens" element={<Mensagens />} />
+        <Route path="/denuncia" element={<Denuncia />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

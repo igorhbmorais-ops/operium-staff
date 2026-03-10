@@ -10,10 +10,10 @@ export default function MenuPage() {
     { label: 'Perfil', icon: User, path: '/perfil', desc: 'Dados pessoais e configurações' },
     { label: 'Notificações', icon: Bell, path: '/notificacoes', desc: 'Alertas e avisos' },
     { label: 'Recibos', icon: Receipt, path: '/documentos', desc: 'Recibos de vencimento' },
-    { label: 'Horário', icon: Clock, path: '/horario', desc: 'Horário de trabalho', soon: true },
-    { label: 'Despesas', icon: FileText, path: '/despesas', desc: 'Submeter reembolsos', soon: true },
-    { label: 'Mensagens', icon: MessageSquare, path: '/mensagens', desc: 'Chat com gestor', soon: true },
-    { label: 'Denúncia', icon: Shield, path: '/denuncia', desc: 'Reportar situação', soon: true },
+    { label: 'Horário', icon: Clock, path: '/horario', desc: 'Horário de trabalho' },
+    { label: 'Despesas', icon: FileText, path: '/despesas', desc: 'Submeter reembolsos' },
+    { label: 'Mensagens', icon: MessageSquare, path: '/mensagens', desc: 'Chat com gestor' },
+    { label: 'Denúncia', icon: Shield, path: '/denuncia', desc: 'Reportar situação' },
   ];
 
   return (
