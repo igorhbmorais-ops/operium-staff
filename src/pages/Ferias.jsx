@@ -51,6 +51,7 @@ export default function Ferias() {
     setLoading(true);
 
     const { error } = await supabase.from('pedidos_ferias').insert({
+      user_id: colaborador.user_id,
       colaborador_id: colaborador.id,
       data_inicio: dataInicio,
       data_fim: dataFim,

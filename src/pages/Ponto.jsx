@@ -71,6 +71,8 @@ export default function Ponto() {
       const agora = new Date();
 
       const { error } = await supabase.from('ponto_registos').insert({
+        user_id: colaborador.user_id,
+        empresa_id: colaborador.empresa_id ?? null,
         colaborador_id: colaborador.id,
         tipo: proximoTipo,
         data: agora.toISOString().slice(0, 10),

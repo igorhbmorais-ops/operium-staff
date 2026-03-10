@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, nome, email, categoria, user_id')
+        .select('id, nome, email, categoria, user_id, empresa_id')
         .eq('auth_user_id', authUserId)
         .single();
 
