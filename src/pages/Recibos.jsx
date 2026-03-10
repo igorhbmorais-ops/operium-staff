@@ -19,15 +19,11 @@ export default function Recibos() {
       .from('recibos_salario')
       .select('*')
       .eq('colaborador_id', colaborador.id)
-      .order('mes_referencia', { ascending: false });
+      .order('ano', { ascending: false })
+      .order('mes', { ascending: false });
 
     setRecibos(data ?? []);
     setLoading(false);
-  }
-
-  async function downloadRecibo(recibo) {
-    if (!recibo.pdf_url) return;
-    window.open(recibo.pdf_url, '_blank');
   }
 
   const meses = [
@@ -35,10 +31,9 @@ export default function Recibos() {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  function formatMesRef(mesRef) {
-    if (!mesRef) return '—';
-    const [ano, mes] = mesRef.split('-');
-    return `${meses[parseInt(mes) - 1]} ${ano}`;
+  function formatMesAno(ano, mes) {
+    if (!ano || !mes) return '—';
+    return `${meses[mes - 1]} ${ano}`;
   }
 
   return (
@@ -60,22 +55,13 @@ export default function Recibos() {
             <div key={r.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">{formatMesRef(r.mes_referencia)}</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(r.valor_liquido)}</p>
+                  <p className="text-sm font-semibold text-gray-700">{formatMesAno(r.ano, r.mes)}</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(r.liquido)}</p>
                   <div className="flex gap-4 mt-1 text-xs text-gray-400">
-                    <span>Bruto: {formatCurrency(r.valor_bruto)}</span>
-                    <span>Descontos: {formatCurrency(r.descontos)}</span>
+                    <span>Bruto: {formatCurrency(r.remuneracao_bruta)}</span>
+                    <span>Descontos: {formatCurrency(r.total_descontos)}</span>
                   </div>
                 </div>
-                {r.pdf_url && (
-                  <button
-                    onClick={() => downloadRecibo(r)}
-                    className="p-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
-                    title="Descarregar PDF"
-                  >
-                    <Download size={20} />
-                  </button>
-                )}
               </div>
             </div>
           ))}

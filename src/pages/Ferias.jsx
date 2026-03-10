@@ -11,7 +11,7 @@ export default function Ferias() {
   const [showForm, setShowForm] = useState(false);
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [notas, setNotas] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function Ferias() {
     const [saldoRes, pedidosRes] = await Promise.all([
       supabase
         .from('saldo_ferias')
-        .select('*')
+        .select('dias_direito, dias_gozados, dias_marcados, dias_transitados')
         .eq('colaborador_id', colaborador.id)
         .eq('ano', new Date().getFullYear())
         .maybeSingle(),
@@ -33,7 +33,15 @@ export default function Ferias() {
         .eq('colaborador_id', colaborador.id)
         .order('data_inicio', { ascending: false }),
     ]);
-    setSaldo(saldoRes.data);
+    if (saldoRes.data) {
+      const d = saldoRes.data;
+      const total = (d.dias_direito ?? 0) + (d.dias_transitados ?? 0);
+      setSaldo({
+        dias_disponiveis: total - (d.dias_gozados ?? 0) - (d.dias_marcados ?? 0),
+        dias_gozados: d.dias_gozados ?? 0,
+        dias_totais: total,
+      });
+    }
     setPedidos(pedidosRes.data ?? []);
   }
 
@@ -46,7 +54,7 @@ export default function Ferias() {
       colaborador_id: colaborador.id,
       data_inicio: dataInicio,
       data_fim: dataFim,
-      observacoes: observacoes || null,
+      notas: notas || null,
       estado: 'pendente',
     });
 
@@ -54,7 +62,7 @@ export default function Ferias() {
       setShowForm(false);
       setDataInicio('');
       setDataFim('');
-      setObservacoes('');
+      setNotas('');
       await fetchData();
     }
     setLoading(false);
@@ -128,10 +136,10 @@ export default function Ferias() {
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Observações (opcional)</label>
+            <label className="block text-xs text-gray-500 mb-1">Notas (opcional)</label>
             <textarea
-              value={observacoes}
-              onChange={e => setObservacoes(e.target.value)}
+              value={notas}
+              onChange={e => setNotas(e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none"
             />
@@ -162,7 +170,7 @@ export default function Ferias() {
                   <p className="text-sm font-medium text-gray-700">
                     {formatDate(p.data_inicio)} — {formatDate(p.data_fim)}
                   </p>
-                  {p.observacoes && <p className="text-xs text-gray-400">{p.observacoes}</p>}
+                  {p.notas && <p className="text-xs text-gray-400">{p.notas}</p>}
                 </div>
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[p.estado] ?? 'bg-gray-100 text-gray-600'}`}>
                   {p.estado}

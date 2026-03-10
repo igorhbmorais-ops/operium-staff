@@ -25,9 +25,8 @@ export default function Ponto() {
       .from('ponto_registos')
       .select('*')
       .eq('colaborador_id', colaborador.id)
-      .gte('data_hora', hoje + 'T00:00:00')
-      .lte('data_hora', hoje + 'T23:59:59')
-      .order('data_hora', { ascending: true });
+      .eq('data', hoje)
+      .order('hora', { ascending: true });
 
     setRegistos(data ?? []);
   }
@@ -69,10 +68,15 @@ export default function Ponto() {
         loc = await obterLocalizacao();
       }
 
+      const agora = new Date();
+
       const { error } = await supabase.from('ponto_registos').insert({
         colaborador_id: colaborador.id,
         tipo: proximoTipo,
-        data_hora: new Date().toISOString(),
+        data: agora.toISOString().slice(0, 10),
+        hora: agora.toISOString(),
+        modo: 'app',
+        registado_por: 'colaborador',
         latitude: loc.lat,
         longitude: loc.lng,
       });
@@ -148,7 +152,7 @@ export default function Ponto() {
                   <div className={`w-2 h-2 rounded-full ${r.tipo === 'entrada' ? 'bg-green-500' : 'bg-red-400'}`} />
                   <span className="text-sm font-medium text-gray-700 capitalize">{r.tipo}</span>
                 </div>
-                <span className="text-sm text-gray-500">{formatTime(r.data_hora)}</span>
+                <span className="text-sm text-gray-500">{formatTime(r.hora)}</span>
               </div>
             ))}
           </div>

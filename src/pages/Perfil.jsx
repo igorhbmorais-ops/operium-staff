@@ -20,13 +20,13 @@ export default function Perfil() {
         .from('formacoes')
         .select('*')
         .eq('colaborador_id', colaborador.id)
-        .order('data_inicio', { ascending: false })
+        .order('data', { ascending: false })
         .limit(5),
       supabase
         .from('exames_medicos')
         .select('*')
         .eq('colaborador_id', colaborador.id)
-        .order('data_exame', { ascending: false })
+        .order('data', { ascending: false })
         .limit(5),
     ]);
     setFormacoes(formRes.data ?? []);
@@ -69,10 +69,10 @@ export default function Perfil() {
             {formacoes.map(f => (
               <div key={f.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{f.designacao ?? f.nome}</p>
+                  <p className="text-sm font-medium text-gray-700">{f.nome}</p>
                   <p className="text-xs text-gray-400">{f.horas}h</p>
                 </div>
-                <span className="text-xs text-gray-500">{formatDate(f.data_inicio)}</span>
+                <span className="text-xs text-gray-500">{formatDate(f.data)}</span>
               </div>
             ))}
           </div>
@@ -95,7 +95,7 @@ export default function Perfil() {
                   <p className="text-sm font-medium text-gray-700">{e.tipo}</p>
                   <p className="text-xs text-gray-400">{e.resultado ?? 'Pendente'}</p>
                 </div>
-                <span className="text-xs text-gray-500">{formatDate(e.data_exame)}</span>
+                <span className="text-xs text-gray-500">{formatDate(e.data)}</span>
               </div>
             ))}
           </div>

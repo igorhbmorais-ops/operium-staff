@@ -21,9 +21,9 @@ export default function Home() {
     // Último registo de ponto
     supabase
       .from('ponto_registos')
-      .select('tipo, data_hora')
+      .select('tipo, hora')
       .eq('colaborador_id', colaborador.id)
-      .order('data_hora', { ascending: false })
+      .order('hora', { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data?.[0]) setUltimoPonto(data[0]);
@@ -32,12 +32,19 @@ export default function Home() {
     // Saldo de férias
     supabase
       .from('saldo_ferias')
-      .select('dias_disponiveis, dias_gozados, dias_totais')
+      .select('dias_direito, dias_gozados, dias_marcados, dias_transitados')
       .eq('colaborador_id', colaborador.id)
       .eq('ano', new Date().getFullYear())
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setSaldoFerias(data);
+        if (data) {
+          const disponiveis = (data.dias_direito ?? 0) + (data.dias_transitados ?? 0) - (data.dias_gozados ?? 0) - (data.dias_marcados ?? 0);
+          setSaldoFerias({
+            dias_disponiveis: disponiveis,
+            dias_gozados: data.dias_gozados ?? 0,
+            dias_totais: (data.dias_direito ?? 0) + (data.dias_transitados ?? 0),
+          });
+        }
       });
   }, [colaborador?.id]);
 
@@ -82,7 +89,7 @@ export default function Home() {
                 {ultimoPonto.tipo === 'entrada' ? 'Em serviço' : 'Saída registada'}
               </p>
               <p className="text-sm text-gray-500">
-                Último registo: {formatTime(ultimoPonto.data_hora)}
+                Último registo: {formatTime(ultimoPonto.hora)}
               </p>
             </div>
             <div className={`w-3 h-3 rounded-full ${ultimoPonto.tipo === 'entrada' ? 'bg-green-500' : 'bg-gray-300'}`} />

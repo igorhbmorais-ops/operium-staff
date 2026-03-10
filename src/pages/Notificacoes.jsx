@@ -15,13 +15,12 @@ export default function Notificacoes() {
   }, [colaborador?.id]);
 
   async function fetchNotificacoes() {
-    // Tentar buscar da tabela notificacoes se existir, ou pedidos_ferias como proxy
     const { data } = await supabase
       .from('pedidos_ferias')
-      .select('id, estado, data_inicio, data_fim, updated_at')
+      .select('id, estado, data_inicio, data_fim, atualizado_em')
       .eq('colaborador_id', colaborador.id)
       .neq('estado', 'pendente')
-      .order('updated_at', { ascending: false })
+      .order('atualizado_em', { ascending: false })
       .limit(20);
 
     const mapped = (data ?? []).map(p => ({
@@ -29,7 +28,7 @@ export default function Notificacoes() {
       titulo: p.estado === 'aprovado' ? 'Férias Aprovadas' : 'Férias Recusadas',
       mensagem: `Pedido de ${formatDate(p.data_inicio)} a ${formatDate(p.data_fim)} foi ${p.estado}.`,
       tipo: p.estado === 'aprovado' ? 'sucesso' : 'alerta',
-      data: p.updated_at,
+      data: p.atualizado_em,
       lida: false,
     }));
 
