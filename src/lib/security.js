@@ -159,6 +159,82 @@ export async function verificarBiometriaRegistada(colaboradorId) {
   return !!data;
 }
 
+// ==================== REGISTAR / VERIFICAR BIOMETRIA (WebAuthn) ====================
+
+export async function registarBiometria(colaboradorId) {
+  // Generate challenge
+  const challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+
+  const createOptions = {
+    publicKey: {
+      challenge,
+      rp: { name: 'Operium Staff', id: window.location.hostname },
+      user: {
+        id: new TextEncoder().encode(colaboradorId),
+        name: `staff-${colaboradorId.slice(0, 8)}`,
+        displayName: 'Operium Staff',
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: 'public-key' },   // ES256
+        { alg: -257, type: 'public-key' },  // RS256
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required',
+      },
+      timeout: 60000,
+    },
+  };
+
+  const credential = await navigator.credentials.create(createOptions);
+
+  // Store credential
+  const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+  const publicKey = btoa(String.fromCharCode(...new Uint8Array(credential.response.getPublicKey())));
+
+  await supabase.from('staff_webauthn').insert({
+    colaborador_id: colaboradorId,
+    credential_id: credentialId,
+    public_key: publicKey,
+    device_name: getDeviceLabel(),
+    activo: true,
+  });
+
+  return true;
+}
+
+export async function verificarBiometria(colaboradorId) {
+  // Get stored credential
+  const { data: creds } = await supabase
+    .from('staff_webauthn')
+    .select('credential_id')
+    .eq('colaborador_id', colaboradorId)
+    .eq('activo', true);
+
+  if (!creds || creds.length === 0) throw new Error('Biometria não registada');
+
+  const allowCredentials = creds.map(c => ({
+    id: Uint8Array.from(atob(c.credential_id), ch => ch.charCodeAt(0)),
+    type: 'public-key',
+  }));
+
+  const challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+
+  const getOptions = {
+    publicKey: {
+      challenge,
+      allowCredentials,
+      userVerification: 'required',
+      timeout: 60000,
+    },
+  };
+
+  await navigator.credentials.get(getOptions);
+  return true; // If we get here, biometria was verified
+}
+
 // ==================== CONFIG ====================
 
 export async function obterConfigPonto(userId) {
