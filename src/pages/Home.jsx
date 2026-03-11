@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone } from 'lucide-react';
+import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -136,49 +136,44 @@ export default function Home() {
       {/* Avisos recentes */}
       {avisos.length > 0 && (
         <div className="space-y-2">
-          {avisos.slice(0, 5).map(aviso => {
-            const isExpanded = expandedAviso === aviso.id;
-            return (
-              <button
-                key={aviso.id}
-                onClick={() => setExpandedAviso(isExpanded ? null : aviso.id)}
-                className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
+          {avisos.slice(0, 5).map(aviso => (
+            <button
+              key={aviso.id}
+              onClick={() => setExpandedAviso(aviso.id)}
+              className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
+                aviso.prioridade === 'urgente'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-orange-50 border-orange-200'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 p-1.5 rounded-lg ${
                   aviso.prioridade === 'urgente'
-                    ? 'bg-red-50 border-red-200'
-                    : 'bg-orange-50 border-orange-200'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 p-1.5 rounded-lg ${
-                    aviso.prioridade === 'urgente'
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-orange-100 text-orange-600'
-                  }`}>
-                    {aviso.prioridade === 'urgente'
-                      ? <AlertTriangle size={14} />
-                      : <Megaphone size={14} />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-gray-800 truncate">{aviso.titulo}</p>
-                      {aviso.prioridade === 'urgente' && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase shrink-0">
-                          Urgente
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-xs text-gray-600 mt-0.5 whitespace-pre-line leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                      {aviso.mensagem}
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {formatDate(aviso.data_publicacao || aviso.created_at)}
-                    </p>
-                  </div>
+                    ? 'bg-red-100 text-red-600'
+                    : 'bg-orange-100 text-orange-600'
+                }`}>
+                  {aviso.prioridade === 'urgente'
+                    ? <AlertTriangle size={14} />
+                    : <Megaphone size={14} />
+                  }
                 </div>
-              </button>
-            );
-          })}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{aviso.titulo}</p>
+                    {aviso.prioridade === 'urgente' && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase shrink-0">
+                        Urgente
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{aviso.mensagem}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {formatDate(aviso.data_publicacao || aviso.created_at)}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
           {avisos.length > 5 && (
             <button
               onClick={() => navigate('/avisos')}
@@ -189,6 +184,62 @@ export default function Home() {
           )}
         </div>
       )}
+
+      {/* Modal Aviso */}
+      {expandedAviso && (() => {
+        const aviso = avisos.find(a => a.id === expandedAviso);
+        if (!aviso) return null;
+        return (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setExpandedAviso(null)}>
+            <div
+              className={`w-full max-w-md rounded-2xl shadow-xl p-5 space-y-3 ${
+                aviso.prioridade === 'urgente' ? 'bg-red-50' : 'bg-white'
+              }`}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`p-2 rounded-lg ${
+                    aviso.prioridade === 'urgente'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-orange-100 text-orange-600'
+                  }`}>
+                    {aviso.prioridade === 'urgente'
+                      ? <AlertTriangle size={18} />
+                      : <Megaphone size={18} />
+                    }
+                  </div>
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{aviso.titulo}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {aviso.prioridade === 'urgente' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase">
+                          Urgente
+                        </span>
+                      )}
+                      <span className="text-[11px] text-gray-400">
+                        {formatDate(aviso.data_publicacao || aviso.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setExpandedAviso(null)}
+                  className="p-1 rounded-full hover:bg-gray-200 text-gray-400"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className={`rounded-xl p-4 ${aviso.prioridade === 'urgente' ? 'bg-white/80' : 'bg-gray-50'}`}>
+                <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+                  {aviso.mensagem}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Card Ponto */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
