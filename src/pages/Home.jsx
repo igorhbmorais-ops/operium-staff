@@ -84,12 +84,12 @@ export default function Home() {
 
     // Horas formação este ano
     supabase
-      .from('formacoes')
-      .select('horas, data')
+      .from('formacao_sessoes')
+      .select('horas, data_inicio')
       .eq('colaborador_id', colaborador.id)
       .then(({ data }) => {
         const total = (data ?? [])
-          .filter(f => f.data && new Date(f.data).getFullYear() === anoActual)
+          .filter(f => f.data_inicio && new Date(f.data_inicio).getFullYear() === anoActual)
           .reduce((sum, f) => sum + (Number(f.horas) || 0), 0);
         setHorasFormacao(total);
       });
