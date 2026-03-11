@@ -15,14 +15,14 @@ const TIPOS = [
 ];
 
 const statusColors = {
-  pendente: 'bg-yellow-100 text-yellow-800',
+  recebida: 'bg-yellow-100 text-yellow-800',
   em_analise: 'bg-blue-100 text-blue-800',
   resolvida: 'bg-green-100 text-green-800',
   arquivada: 'bg-gray-100 text-gray-600',
 };
 
 const statusLabels = {
-  pendente: 'Pendente',
+  recebida: 'Recebida',
   em_analise: 'Em análise',
   resolvida: 'Resolvida',
   arquivada: 'Arquivada',
@@ -79,7 +79,7 @@ export default function Denuncia() {
       envolvidos: envolvidos.trim() || null,
       anonima,
       colaborador_id: anonima ? null : colaborador.id,
-      estado: 'pendente',
+      estado: 'recebida',
     });
 
     if (error) {
