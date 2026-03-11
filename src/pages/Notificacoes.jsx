@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Bell, Check } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { ListSkeleton } from '@/components/Skeleton';
 
 export default function Notificacoes() {
   const { colaborador } = useAuth();
@@ -47,13 +48,12 @@ export default function Notificacoes() {
       <h1 className="text-2xl font-bold text-gray-900">Notificações</h1>
 
       {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-400">A carregar...</p>
-        </div>
+        <ListSkeleton rows={4} />
       ) : notificacoes.length === 0 ? (
         <div className="text-center py-12">
-          <Bell size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-400">Sem notificações</p>
+          <Bell size={40} className="mx-auto text-gray-200 mb-3" />
+          <p className="text-sm font-medium text-gray-400">Sem notificações</p>
+          <p className="text-xs text-gray-300 mt-1">Está tudo em dia!</p>
         </div>
       ) : (
         <div className="space-y-3">

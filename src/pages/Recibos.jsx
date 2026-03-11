@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { CardSkeleton } from '@/components/Skeleton';
 
 export default function Recibos() {
   const { colaborador } = useAuth();
@@ -41,9 +42,7 @@ export default function Recibos() {
       <h1 className="text-2xl font-bold text-gray-900">Recibos de Vencimento</h1>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-blue-500" />
-        </div>
+        <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}</div>
       ) : recibos.length === 0 ? (
         <div className="text-center py-12">
           <FileText size={48} className="mx-auto text-gray-300 mb-3" />

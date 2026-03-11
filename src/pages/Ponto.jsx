@@ -4,8 +4,8 @@ import { useSecurity } from '@/contexts/SecurityContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabase';
 import { getDeviceFingerprint } from '@/lib/security';
-import { Clock, MapPin, Loader2, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
-import { formatTime } from '@/lib/utils';
+import { Clock, MapPin, Loader2, CheckCircle2, AlertCircle, Camera, Calendar, TrendingUp, AlertTriangle, TimerOff } from 'lucide-react';
+import { formatTime, formatDate } from '@/lib/utils';
 
 function SelfieCapture({ onCapture, onCancel }) {
   const videoRef = useRef(null);
@@ -68,12 +68,16 @@ export default function Ponto() {
   const [feedback, setFeedback] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const [selfieUrl, setSelfieUrl] = useState(null);
+  const [tab, setTab] = useState('hoje');
+  const [historico, setHistorico] = useState([]);
+  const [resumoMes, setResumoMes] = useState(null);
 
   const hoje = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     if (!colaborador?.id) return;
     fetchRegistos();
+    fetchHistorico();
   }, [colaborador?.id]);
 
   async function fetchRegistos() {
@@ -84,6 +88,48 @@ export default function Ponto() {
       .eq('data', hoje)
       .order('hora', { ascending: true });
     setRegistos(data ?? []);
+  }
+
+  async function fetchHistorico() {
+    const mesActual = new Date();
+    const primeiroDia = new Date(mesActual.getFullYear(), mesActual.getMonth(), 1).toISOString().slice(0, 10);
+    const ultimoDia = new Date(mesActual.getFullYear(), mesActual.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+    const { data } = await supabase
+      .from('ponto_registos')
+      .select('data, tipo, hora')
+      .eq('colaborador_id', colaborador.id)
+      .gte('data', primeiroDia)
+      .lte('data', ultimoDia)
+      .order('data', { ascending: false })
+      .order('hora', { ascending: true });
+
+    if (!data?.length) { setHistorico([]); return; }
+
+    // Agrupar por dia
+    const porDia = {};
+    data.forEach(r => {
+      if (!porDia[r.data]) porDia[r.data] = [];
+      porDia[r.data].push(r);
+    });
+
+    const dias = Object.entries(porDia).map(([dia, regs]) => {
+      const entrada = regs.find(r => r.tipo === 'entrada');
+      const saida = regs.find(r => r.tipo === 'saida');
+      let horas = 0;
+      if (entrada?.hora && saida?.hora) {
+        horas = (new Date(saida.hora) - new Date(entrada.hora)) / 3600000;
+      }
+      return { dia, entrada: entrada?.hora, saida: saida?.hora, horas };
+    });
+
+    setHistorico(dias);
+
+    // Resumo
+    const totalHoras = dias.reduce((s, d) => s + d.horas, 0);
+    const diasTrabalhados = dias.filter(d => d.horas > 0).length;
+    const horasExtra = dias.reduce((s, d) => s + Math.max(0, d.horas - 8), 0);
+    setResumoMes({ totalHoras, diasTrabalhados, horasExtra });
   }
 
   function obterLocalizacao() {
@@ -209,6 +255,8 @@ export default function Ponto() {
     estadoColor = 'text-gray-600';
   }
 
+  const nomeMes = new Date().toLocaleDateString('pt-PT', { month: 'long' });
+
   return (
     <div className="p-4 pb-24 space-y-5">
       {showCamera && (
@@ -220,6 +268,7 @@ export default function Ponto() {
         <p className="text-sm text-gray-500">{new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
 
+      {/* Botao circular */}
       <div className="flex flex-col items-center py-6">
         <p className={`text-sm font-medium mb-4 ${estadoColor}`}>{estadoLabel}</p>
         <button
@@ -266,31 +315,130 @@ export default function Ponto() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Registos de Hoje</h2>
-          {horasTrabalhadas > 0 && (
-            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-              {horasTrabalhadas.toFixed(1)}h
-            </span>
+      {/* Tab toggle */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        <button
+          onClick={() => setTab('hoje')}
+          className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+            tab === 'hoje' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'
+          }`}
+        >
+          Hoje
+        </button>
+        <button
+          onClick={() => setTab('historico')}
+          className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+            tab === 'historico' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'
+          }`}
+        >
+          Histórico
+        </button>
+      </div>
+
+      {tab === 'hoje' ? (
+        /* Registos de Hoje */
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Registos de Hoje</h2>
+            {horasTrabalhadas > 0 && (
+              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                {horasTrabalhadas.toFixed(1)}h
+              </span>
+            )}
+          </div>
+          {registos.length === 0 ? (
+            <div className="text-center py-8">
+              <TimerOff size={36} className="mx-auto text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">Sem registos hoje</p>
+              <p className="text-xs text-gray-300 mt-1">Registe a sua entrada no botão acima</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {registos.map((r) => (
+                <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-2.5 h-2.5 rounded-full ${r.tipo === 'entrada' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                    <span className="text-sm font-medium text-gray-700 capitalize">{r.tipo}</span>
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">{formatTime(r.hora)}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        {registos.length === 0 ? (
-          <p className="text-sm text-gray-300">Sem registos</p>
-        ) : (
-          <div className="space-y-2">
-            {registos.map((r) => (
-              <div key={r.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${r.tipo === 'entrada' ? 'bg-green-500' : 'bg-orange-400'}`} />
-                  <span className="text-sm font-medium text-gray-700 capitalize">{r.tipo}</span>
-                </div>
-                <span className="text-sm text-gray-500 font-medium">{formatTime(r.hora)}</span>
+      ) : (
+        /* Historico + Resumo */
+        <div className="space-y-4">
+          {/* Resumo mensal */}
+          {resumoMes && (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                <TrendingUp size={18} className="mx-auto text-blue-500 mb-1" />
+                <p className="text-lg font-bold text-gray-900">{resumoMes.totalHoras.toFixed(1)}h</p>
+                <p className="text-[11px] text-gray-400">Total horas</p>
               </div>
-            ))}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                <Calendar size={18} className="mx-auto text-green-500 mb-1" />
+                <p className="text-lg font-bold text-gray-900">{resumoMes.diasTrabalhados}</p>
+                <p className="text-[11px] text-gray-400">Dias trabalhados</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 text-center">
+                <AlertTriangle size={18} className="mx-auto text-orange-500 mb-1" />
+                <p className="text-lg font-bold text-gray-900">{resumoMes.horasExtra.toFixed(1)}h</p>
+                <p className="text-[11px] text-gray-400">Horas extra</p>
+              </div>
+            </div>
+          )}
+
+          {/* Lista historico por dia */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              {nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)} {new Date().getFullYear()}
+            </h2>
+            {historico.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar size={36} className="mx-auto text-gray-200 mb-2" />
+                <p className="text-sm text-gray-400">Sem registos este mês</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {historico.map((d) => {
+                  const dataObj = new Date(d.dia + 'T00:00:00');
+                  const diaSemana = dataObj.toLocaleDateString('pt-PT', { weekday: 'short' });
+                  const diaNum = dataObj.getDate();
+                  return (
+                    <div key={d.dia} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
+                      <div className="w-10 text-center flex-shrink-0">
+                        <p className="text-xs text-gray-400 capitalize">{diaSemana}</p>
+                        <p className="text-sm font-bold text-gray-700">{diaNum}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {d.entrada ? formatTime(d.entrada) : '—'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                            {d.saida ? formatTime(d.saida) : '—'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        d.horas >= 8 ? 'bg-green-50 text-green-600' :
+                        d.horas > 0 ? 'bg-yellow-50 text-yellow-600' :
+                        'bg-gray-50 text-gray-400'
+                      }`}>
+                        {d.horas > 0 ? `${d.horas.toFixed(1)}h` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

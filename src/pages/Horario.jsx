@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Clock, Moon, Sun, Sunrise } from 'lucide-react';
+import { CardSkeleton } from '@/components/Skeleton';
 
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 const DIAS_CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -43,7 +44,7 @@ export default function Horario() {
       <p className="text-sm text-gray-500">Horário semanal de trabalho</p>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400 text-sm">A carregar...</div>
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)}</div>
       ) : horarios.length === 0 ? (
         <div className="text-center py-16">
           <Clock size={48} className="mx-auto text-gray-200 mb-3" />

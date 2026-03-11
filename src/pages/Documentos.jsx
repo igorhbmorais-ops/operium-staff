@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { FileText, GraduationCap, Stethoscope, ScrollText, ClipboardList, Plus, Loader2, Send } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import { ListSkeleton } from '@/components/Skeleton';
 
 const tabs = [
   { id: 'recibos', label: 'Recibos', icon: FileText },
@@ -105,7 +106,7 @@ export default function Documentos() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400 text-sm">A carregar...</div>
+        <div className="space-y-3"><ListSkeleton rows={3} /><ListSkeleton rows={2} /></div>
       ) : (
         <>
           {/* Recibos */}
