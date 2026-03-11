@@ -62,6 +62,7 @@ export default function Ferias() {
       colaborador_id: colaborador.id,
       data_inicio: dataInicio,
       data_fim: dataFim,
+      dias_uteis: diasUteis,
       notas: notas || null,
       estado: 'pendente',
     });
