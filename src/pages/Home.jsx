@@ -1,9 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight } from 'lucide-react';
+import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { formatTime, formatCurrency } from '@/lib/utils';
+import { formatTime, formatCurrency, formatDate } from '@/lib/utils';
 
 export default function Home() {
   const { colaborador } = useAuth();
@@ -14,6 +14,7 @@ export default function Home() {
   const [ultimoRecibo, setUltimoRecibo] = useState(null);
   const [horasFormacao, setHorasFormacao] = useState(0);
   const [proximoExame, setProximoExame] = useState(null);
+  const [avisos, setAvisos] = useState([]);
 
   const primeiroNome = colaborador?.nome?.split(' ')[0] ?? 'Colaborador';
   const hora = new Date().getHours();
@@ -90,6 +91,21 @@ export default function Home() {
           setProximoExame(diff > 0 ? diff : null);
         }
       });
+
+    // Avisos recentes (últimos 5, publicados)
+    supabase
+      .from('avisos_staff')
+      .select('*')
+      .or(`data_publicacao.is.null,data_publicacao.lte.${hoje}`)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        // Filtrar por destinatários
+        const filtered = (data ?? []).filter(a =>
+          !a.destinatarios || a.destinatarios.includes(colaborador.id)
+        );
+        setAvisos(filtered);
+      });
   }, [colaborador?.id]);
 
   const emTurno = ultimoPonto?.tipo === 'entrada';
@@ -104,12 +120,69 @@ export default function Home() {
           <p className="text-sm text-gray-500">{new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
         <button
-          onClick={() => navigate('/notificacoes')}
+          onClick={() => navigate('/avisos')}
           className="relative w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
         >
           <Bell size={20} className="text-gray-600" />
+          {avisos.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {avisos.length > 9 ? '9+' : avisos.length}
+            </span>
+          )}
         </button>
       </div>
+
+      {/* Avisos recentes */}
+      {avisos.length > 0 && (
+        <div className="space-y-2">
+          {avisos.slice(0, 3).map(aviso => (
+            <button
+              key={aviso.id}
+              onClick={() => navigate('/avisos')}
+              className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
+                aviso.prioridade === 'urgente'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-orange-50 border-orange-200'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 p-1.5 rounded-lg ${
+                  aviso.prioridade === 'urgente'
+                    ? 'bg-red-100 text-red-600'
+                    : 'bg-orange-100 text-orange-600'
+                }`}>
+                  {aviso.prioridade === 'urgente'
+                    ? <AlertTriangle size={14} />
+                    : <Megaphone size={14} />
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{aviso.titulo}</p>
+                    {aviso.prioridade === 'urgente' && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase shrink-0">
+                        Urgente
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{aviso.mensagem}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {formatDate(aviso.data_publicacao || aviso.created_at)}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+          {avisos.length > 3 && (
+            <button
+              onClick={() => navigate('/avisos')}
+              className="w-full text-center text-xs text-orange-600 font-medium py-1.5 hover:text-orange-700"
+            >
+              Ver todos os {avisos.length} avisos →
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Card Ponto */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
