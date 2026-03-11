@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight } from 'lucide-react';
+import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight, BookOpen } from 'lucide-react';
 
 export default function MenuPage() {
   const { colaborador, logout } = useAuth();
@@ -13,6 +13,7 @@ export default function MenuPage() {
     { label: 'Horário', icon: Clock, path: '/horario', desc: 'Horário de trabalho' },
     { label: 'Despesas', icon: FileText, path: '/despesas', desc: 'Submeter reembolsos' },
     { label: 'Mensagens', icon: MessageSquare, path: '/mensagens', desc: 'Chat com gestor' },
+    { label: 'Regulamento', icon: BookOpen, path: '/regulamento', desc: 'Documentos da empresa' },
     { label: 'Denúncia', icon: Shield, path: '/denuncia', desc: 'Reportar situação' },
   ];
 

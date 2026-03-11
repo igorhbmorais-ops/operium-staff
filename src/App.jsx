@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SecurityProvider, useSecurity } from '@/contexts/SecurityContext';
 import AppLayout from '@/components/AppLayout';
 import Login from '@/pages/Login';
+import SetupPassword from '@/pages/SetupPassword';
 import PinSetup from '@/pages/PinSetup';
 import PinVerify from '@/pages/PinVerify';
 import Home from '@/pages/Home';
@@ -17,6 +18,8 @@ import Horario from '@/pages/Horario';
 import Despesas from '@/pages/Despesas';
 import Mensagens from '@/pages/Mensagens';
 import Denuncia from '@/pages/Denuncia';
+import Regulamento from '@/pages/Regulamento';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { Loader2 } from 'lucide-react';
 
 function SecuredRoutes() {
@@ -55,6 +58,7 @@ function SecuredRoutes() {
         <Route path="/despesas" element={<Despesas />} />
         <Route path="/mensagens" element={<Mensagens />} />
         <Route path="/denuncia" element={<Denuncia />} />
+        <Route path="/regulamento" element={<Regulamento />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -75,6 +79,7 @@ function AppRoutes() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/setup-password" element={<SetupPassword />} />
         <Route path="*" element={<Login />} />
       </Routes>
     );
@@ -112,9 +117,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

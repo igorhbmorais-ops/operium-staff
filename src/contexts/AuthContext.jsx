@@ -9,7 +9,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Refresh token inválido ou expirado — limpar sessão
+        console.warn('Sessão inválida:', error.message);
+        handleSessionExpired();
+        return;
+      }
       if (session?.user) {
         setUser(session.user);
         fetchColaborador(session.user.id);
@@ -18,19 +24,36 @@ export function AuthProvider({ children }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
         setUser(session.user);
         fetchColaborador(session.user.id);
-      } else {
+        return;
+      }
+
+      if (event === 'SIGNED_OUT' || !session) {
         setUser(null);
         setColaborador(null);
         setLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        setUser(session.user);
+        fetchColaborador(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  function handleSessionExpired() {
+    // Limpar tudo — força redirect para login
+    localStorage.removeItem('sb-qoqvbxocoyhyjehictpc-auth-token');
+    setUser(null);
+    setColaborador(null);
+    setLoading(false);
+  }
 
   async function fetchColaborador(authUserId) {
     try {
@@ -55,6 +78,7 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     await supabase.auth.signOut();
+    localStorage.removeItem('sb-qoqvbxocoyhyjehictpc-auth-token');
     setUser(null);
     setColaborador(null);
   }

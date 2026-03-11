@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSecurity } from '@/contexts/SecurityContext';
+import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabase';
 import { getDeviceFingerprint } from '@/lib/security';
 import { Clock, MapPin, Loader2, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
@@ -59,6 +60,7 @@ function SelfieCapture({ onCapture, onCancel }) {
 export default function Ponto() {
   const { colaborador } = useAuth();
   const { config } = useSecurity();
+  const toast = useToast();
   const [registos, setRegistos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -169,9 +171,11 @@ export default function Ponto() {
       const { error } = await supabase.from('ponto_registos').insert(insertData);
 
       if (error) throw error;
+      toast(proximoTipo === 'entrada' ? 'Entrada registada!' : 'Saída registada!', 'success');
       setFeedback({ type: 'success', msg: proximoTipo === 'entrada' ? 'Entrada registada!' : 'Saída registada!' });
       await fetchRegistos();
     } catch (err) {
+      toast(err.message, 'error');
       setFeedback({ type: 'error', msg: err.message });
     } finally {
       setLoading(false);
