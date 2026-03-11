@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabase';
-import { FileText, Check, Download, Loader2, BookOpen, Paperclip, ExternalLink } from 'lucide-react';
+import { FileText, Check, Loader2, BookOpen, Paperclip, ExternalLink, X, Download } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { EmptyState, ListSkeleton } from '@/components/Skeleton';
+
+// Extensões que podemos mostrar inline
+const IMG_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
+const PDF_EXT = ['pdf'];
+
+function getExtensao(path) {
+  return (path || '').split('.').pop().toLowerCase();
+}
 
 export default function Regulamento() {
   const { colaborador } = useAuth();
@@ -12,6 +20,7 @@ export default function Regulamento() {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmando, setConfirmando] = useState(null);
+  const [viewer, setViewer] = useState(null); // { url, titulo, ext }
 
   useEffect(() => {
     if (!colaborador?.id) return;
@@ -19,14 +28,12 @@ export default function Regulamento() {
   }, [colaborador?.id]);
 
   async function fetchDocumentos() {
-    // Buscar documentos da empresa
     const { data: allDocs } = await supabase
       .from('documentos_empresa')
       .select('*')
       .eq('empresa_id', colaborador.empresa_id)
       .order('created_at', { ascending: false });
 
-    // Filtrar: destinatarios NULL (todos) ou que inclua este colaborador
     const docs = (allDocs ?? []).filter(d =>
       !d.destinatarios || d.destinatarios.includes(colaborador.id)
     );
@@ -37,7 +44,6 @@ export default function Regulamento() {
       return;
     }
 
-    // Buscar leituras deste colaborador
     const { data: leituras } = await supabase
       .from('leituras_documentos')
       .select('documento_id, lido_em')
@@ -51,6 +57,27 @@ export default function Regulamento() {
       lido_em: leiturasMap.get(d.id) ?? null,
     })));
     setLoading(false);
+  }
+
+  async function abrirAnexo(doc) {
+    const { data, error } = await supabase.storage
+      .from('documentos-empresa')
+      .createSignedUrl(doc.ficheiro_path, 3600);
+    if (error || !data?.signedUrl) {
+      toast('Erro ao abrir ficheiro', 'error');
+      return;
+    }
+    const ext = getExtensao(doc.ficheiro_path);
+    // Imagens e PDFs abrem no viewer interno
+    if (IMG_EXT.includes(ext) || PDF_EXT.includes(ext)) {
+      setViewer({ url: data.signedUrl, titulo: doc.titulo, ext });
+    } else {
+      // Outros tipos: download directo via link
+      const a = document.createElement('a');
+      a.href = data.signedUrl;
+      a.download = doc.titulo || 'documento';
+      a.click();
+    }
   }
 
   async function confirmarLeitura(docId) {
@@ -110,13 +137,7 @@ export default function Regulamento() {
               <div className="flex gap-2 mt-3">
                 {doc.ficheiro_path && (
                   <button
-                    onClick={async () => {
-                      const { data, error } = await supabase.storage
-                        .from('documentos-empresa')
-                        .createSignedUrl(doc.ficheiro_path, 3600);
-                      if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                      else toast('Erro ao abrir ficheiro', 'error');
-                    }}
+                    onClick={() => abrirAnexo(doc)}
                     className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     <Paperclip size={14} /> Anexo
@@ -149,6 +170,50 @@ export default function Regulamento() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal Viewer — imagens e PDFs inline */}
+      {viewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header do modal */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <p className="text-sm font-semibold text-gray-800 truncate">{viewer.titulo}</p>
+              <div className="flex items-center gap-2">
+                <a
+                  href={viewer.url}
+                  download
+                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Download size={14} /> Descarregar
+                </a>
+                <button
+                  onClick={() => setViewer(null)}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50">
+              {IMG_EXT.includes(viewer.ext) ? (
+                <img
+                  src={viewer.url}
+                  alt={viewer.titulo}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              ) : PDF_EXT.includes(viewer.ext) ? (
+                <iframe
+                  src={viewer.url}
+                  title={viewer.titulo}
+                  className="w-full h-[70vh] rounded-lg border border-gray-200"
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
     </div>
