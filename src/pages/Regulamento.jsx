@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabase';
-import { FileText, Check, Download, Loader2, BookOpen } from 'lucide-react';
+import { FileText, Check, Download, Loader2, BookOpen, Paperclip, ExternalLink } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { EmptyState, ListSkeleton } from '@/components/Skeleton';
 
@@ -24,7 +24,6 @@ export default function Regulamento() {
       .from('documentos_empresa')
       .select('*')
       .eq('empresa_id', colaborador.empresa_id)
-      .eq('activo', true)
       .order('created_at', { ascending: false });
 
     if (!docs?.length) {
@@ -104,14 +103,28 @@ export default function Regulamento() {
               </div>
 
               <div className="flex gap-2 mt-3">
-                {doc.ficheiro_url && (
+                {doc.ficheiro_path && (
+                  <button
+                    onClick={async () => {
+                      const { data, error } = await supabase.storage
+                        .from('documentos-empresa')
+                        .createSignedUrl(doc.ficheiro_path, 3600);
+                      if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                      else toast('Erro ao abrir ficheiro', 'error');
+                    }}
+                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <Paperclip size={14} /> Anexo
+                  </button>
+                )}
+                {doc.documento_url && (
                   <a
-                    href={doc.ficheiro_url}
+                    href={doc.documento_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    <Download size={14} /> Descarregar
+                    <ExternalLink size={14} /> Ver documento
                   </a>
                 )}
                 {!doc.lido && (

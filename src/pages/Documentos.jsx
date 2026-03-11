@@ -41,8 +41,8 @@ export default function Documentos() {
     setLoading(true);
     const [recRes, formRes, examRes, declRes] = await Promise.all([
       supabase.from('recibos_salario').select('*').eq('colaborador_id', colaborador.id).order('ano', { ascending: false }).order('mes', { ascending: false }),
-      supabase.from('formacoes').select('*').eq('colaborador_id', colaborador.id).order('data', { ascending: false }),
-      supabase.from('exames_medicos').select('*').eq('colaborador_id', colaborador.id).order('data', { ascending: false }),
+      supabase.from('formacao_sessoes').select('*').eq('colaborador_id', colaborador.id).order('data_inicio', { ascending: false }),
+      supabase.from('medicina_trabalho').select('*').eq('colaborador_id', colaborador.id).order('data_exame', { ascending: false }),
       supabase.from('declaracoes_pedidos').select('*').eq('colaborador_id', colaborador.id).order('created_at', { ascending: false }),
     ]);
     setRecibos(recRes.data ?? []);
@@ -73,7 +73,7 @@ export default function Documentos() {
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const anoActual = new Date().getFullYear();
   const horasAno = formacoes
-    .filter(f => f.data && new Date(f.data).getFullYear() === anoActual)
+    .filter(f => f.data_inicio && new Date(f.data_inicio).getFullYear() === anoActual)
     .reduce((sum, f) => sum + (Number(f.horas) || 0), 0);
 
   const estadoDecl = {
@@ -254,15 +254,10 @@ export default function Documentos() {
               ) : formacoes.map(f => (
                 <div key={f.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-medium text-gray-800">{f.nome}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{f.horas}h · {f.tipo ?? 'voluntária'}</p>
-                    {f.validade && (
-                      <p className={`text-xs mt-1 ${new Date(f.validade) < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
-                        {new Date(f.validade) < new Date() ? 'Expirado' : `Válido até ${formatDate(f.validade)}`}
-                      </p>
-                    )}
+                    <p className="text-sm font-medium text-gray-800">{f.titulo}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{f.horas}h · {f.categoria ?? 'geral'}</p>
                   </div>
-                  <span className="text-xs text-gray-400">{formatDate(f.data)}</span>
+                  <span className="text-xs text-gray-400">{formatDate(f.data_inicio)}</span>
                 </div>
               ))}
             </div>
@@ -277,22 +272,23 @@ export default function Documentos() {
                 const resultColor = {
                   apto: 'bg-green-100 text-green-700',
                   apto_condicional: 'bg-yellow-100 text-yellow-700',
-                  inapto: 'bg-red-100 text-red-700',
+                  inapto_temporario: 'bg-orange-100 text-orange-700',
+                  inapto_definitivo: 'bg-red-100 text-red-700',
                 };
                 return (
                   <div key={e.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-gray-800 capitalize">{e.tipo}</p>
+                      <p className="text-sm font-medium text-gray-800 capitalize">{e.tipo_exame}</p>
                       {e.resultado && (
                         <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${resultColor[e.resultado] ?? 'bg-gray-100 text-gray-600'}`}>
-                          {e.resultado.replace('_', ' ')}
+                          {e.resultado.replace(/_/g, ' ')}
                         </span>
                       )}
                       {e.proximo_exame && (
                         <p className="text-xs text-gray-400 mt-1">Próximo: {formatDate(e.proximo_exame)}</p>
                       )}
                     </div>
-                    <span className="text-xs text-gray-400">{formatDate(e.data)}</span>
+                    <span className="text-xs text-gray-400">{formatDate(e.data_exame)}</span>
                   </div>
                 );
               })}

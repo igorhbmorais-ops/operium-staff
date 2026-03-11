@@ -149,16 +149,16 @@ export default function Perfil() {
   async function fetchData() {
     const [formRes, examRes] = await Promise.all([
       supabase
-        .from('formacoes')
+        .from('formacao_sessoes')
         .select('*')
         .eq('colaborador_id', colaborador.id)
-        .order('data', { ascending: false })
+        .order('data_inicio', { ascending: false })
         .limit(5),
       supabase
-        .from('exames_medicos')
+        .from('medicina_trabalho')
         .select('*')
         .eq('colaborador_id', colaborador.id)
-        .order('data', { ascending: false })
+        .order('data_exame', { ascending: false })
         .limit(5),
     ]);
     setFormacoes(formRes.data ?? []);
@@ -204,10 +204,10 @@ export default function Perfil() {
             {formacoes.map(f => (
               <div key={f.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{f.nome}</p>
+                  <p className="text-sm font-medium text-gray-700">{f.titulo}</p>
                   <p className="text-xs text-gray-400">{f.horas}h</p>
                 </div>
-                <span className="text-xs text-gray-500">{formatDate(f.data)}</span>
+                <span className="text-xs text-gray-500">{formatDate(f.data_inicio)}</span>
               </div>
             ))}
           </div>
@@ -227,10 +227,10 @@ export default function Perfil() {
             {exames.map(e => (
               <div key={e.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{e.tipo}</p>
+                  <p className="text-sm font-medium text-gray-700 capitalize">{e.tipo_exame}</p>
                   <p className="text-xs text-gray-400">{e.resultado ?? 'Pendente'}</p>
                 </div>
-                <span className="text-xs text-gray-500">{formatDate(e.data)}</span>
+                <span className="text-xs text-gray-500">{formatDate(e.data_exame)}</span>
               </div>
             ))}
           </div>
