@@ -16,6 +16,22 @@ export default function Home() {
   const [proximoExame, setProximoExame] = useState(null);
   const [avisos, setAvisos] = useState([]);
   const [expandedAviso, setExpandedAviso] = useState(null);
+  const [readAvisos, setReadAvisos] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('readAvisos') || '[]')); }
+    catch { return new Set(); }
+  });
+
+  const markAsRead = (id) => {
+    setReadAvisos(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem('readAvisos', JSON.stringify([...next]));
+      return next;
+    });
+    setExpandedAviso(id);
+  };
+
+  const unreadCount = avisos.filter(a => !readAvisos.has(a.id)).length;
 
   const primeiroNome = colaborador?.nome?.split(' ')[0] ?? 'Colaborador';
   const hora = new Date().getHours();
@@ -125,9 +141,9 @@ export default function Home() {
           className="relative w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
         >
           <Bell size={20} className="text-gray-600" />
-          {avisos.length > 0 && (
+          {unreadCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-              {avisos.length > 9 ? '9+' : avisos.length}
+              {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
@@ -139,7 +155,7 @@ export default function Home() {
           {avisos.slice(0, 5).map(aviso => (
             <button
               key={aviso.id}
-              onClick={() => setExpandedAviso(aviso.id)}
+              onClick={() => markAsRead(aviso.id)}
               className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
                 aviso.prioridade === 'urgente'
                   ? 'bg-red-50 border-red-200'
@@ -190,7 +206,7 @@ export default function Home() {
         const aviso = avisos.find(a => a.id === expandedAviso);
         if (!aviso) return null;
         return (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setExpandedAviso(null)}>
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setExpandedAviso(null)}>
             <div
               className={`w-full max-w-md rounded-2xl shadow-xl p-5 space-y-3 ${
                 aviso.prioridade === 'urgente' ? 'bg-red-50' : 'bg-white'
