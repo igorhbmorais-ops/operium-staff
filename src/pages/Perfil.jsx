@@ -85,10 +85,9 @@ function AlterarPassword() {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Password actual</label>
             <div className="relative">
-              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input type={showActual ? 'text' : 'password'} value={actual} onChange={e => setActual(e.target.value)} required
-                className="w-full pl-9 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
-              <button type="button" onClick={() => setShowActual(!showActual)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                className="w-full px-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
+              <button type="button" onClick={() => setShowActual(!showActual)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showActual ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -96,10 +95,9 @@ function AlterarPassword() {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Nova password</label>
             <div className="relative">
-              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input type={showNova ? 'text' : 'password'} value={nova} onChange={e => setNova(e.target.value)} required
-                className="w-full pl-9 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
-              <button type="button" onClick={() => setShowNova(!showNova)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                className="w-full px-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
+              <button type="button" onClick={() => setShowNova(!showNova)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showNova ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -120,9 +118,8 @@ function AlterarPassword() {
           <div>
             <label className="block text-xs text-gray-500 mb-1">Confirmar nova password</label>
             <div className="relative">
-              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input type="password" value={confirmar} onChange={e => setConfirmar(e.target.value)} required
-                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all" />
             </div>
             {confirmar.length > 0 && !passwordsMatch && (
               <p className="text-[11px] text-red-500 mt-1">As passwords não coincidem</p>
