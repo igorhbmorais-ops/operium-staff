@@ -16,7 +16,6 @@ const sections = [
   {
     title: 'Comunicação',
     items: [
-      { label: 'Avisos', icon: Megaphone, path: '/avisos', desc: 'Lembretes e avisos da empresa' },
       { label: 'Mensagens', icon: MessageSquare, path: '/mensagens', desc: 'Chat com gestor' },
       { label: 'Despesas', icon: FileText, path: '/despesas', desc: 'Submeter reembolsos', perm: 'despesas' },
     ],

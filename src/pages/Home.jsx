@@ -15,6 +15,7 @@ export default function Home() {
   const [horasFormacao, setHorasFormacao] = useState(0);
   const [proximoExame, setProximoExame] = useState(null);
   const [avisos, setAvisos] = useState([]);
+  const [expandedAviso, setExpandedAviso] = useState(null);
 
   const primeiroNome = colaborador?.nome?.split(' ')[0] ?? 'Colaborador';
   const hora = new Date().getHours();
@@ -135,50 +136,55 @@ export default function Home() {
       {/* Avisos recentes */}
       {avisos.length > 0 && (
         <div className="space-y-2">
-          {avisos.slice(0, 3).map(aviso => (
-            <button
-              key={aviso.id}
-              onClick={() => navigate('/avisos')}
-              className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
-                aviso.prioridade === 'urgente'
-                  ? 'bg-red-50 border-red-200'
-                  : 'bg-orange-50 border-orange-200'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`mt-0.5 p-1.5 rounded-lg ${
+          {avisos.slice(0, 5).map(aviso => {
+            const isExpanded = expandedAviso === aviso.id;
+            return (
+              <button
+                key={aviso.id}
+                onClick={() => setExpandedAviso(isExpanded ? null : aviso.id)}
+                className={`w-full text-left rounded-xl border shadow-sm p-3.5 transition-all active:scale-[0.99] ${
                   aviso.prioridade === 'urgente'
-                    ? 'bg-red-100 text-red-600'
-                    : 'bg-orange-100 text-orange-600'
-                }`}>
-                  {aviso.prioridade === 'urgente'
-                    ? <AlertTriangle size={14} />
-                    : <Megaphone size={14} />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{aviso.titulo}</p>
-                    {aviso.prioridade === 'urgente' && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase shrink-0">
-                        Urgente
-                      </span>
-                    )}
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-orange-50 border-orange-200'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 p-1.5 rounded-lg ${
+                    aviso.prioridade === 'urgente'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-orange-100 text-orange-600'
+                  }`}>
+                    {aviso.prioridade === 'urgente'
+                      ? <AlertTriangle size={14} />
+                      : <Megaphone size={14} />
+                    }
                   </div>
-                  <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{aviso.mensagem}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {formatDate(aviso.data_publicacao || aviso.created_at)}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{aviso.titulo}</p>
+                      {aviso.prioridade === 'urgente' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase shrink-0">
+                          Urgente
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs text-gray-600 mt-0.5 whitespace-pre-line leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {aviso.mensagem}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {formatDate(aviso.data_publicacao || aviso.created_at)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
-          {avisos.length > 3 && (
+              </button>
+            );
+          })}
+          {avisos.length > 5 && (
             <button
               onClick={() => navigate('/avisos')}
               className="w-full text-center text-xs text-orange-600 font-medium py-1.5 hover:text-orange-700"
             >
-              Ver todos os {avisos.length} avisos →
+              Ver todos os avisos →
             </button>
           )}
         </div>
