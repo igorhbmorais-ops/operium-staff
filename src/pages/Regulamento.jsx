@@ -20,13 +20,18 @@ export default function Regulamento() {
 
   async function fetchDocumentos() {
     // Buscar documentos da empresa
-    const { data: docs } = await supabase
+    const { data: allDocs } = await supabase
       .from('documentos_empresa')
       .select('*')
       .eq('empresa_id', colaborador.empresa_id)
       .order('created_at', { ascending: false });
 
-    if (!docs?.length) {
+    // Filtrar: destinatarios NULL (todos) ou que inclua este colaborador
+    const docs = (allDocs ?? []).filter(d =>
+      !d.destinatarios || d.destinatarios.includes(colaborador.id)
+    );
+
+    if (!docs.length) {
       setDocumentos([]);
       setLoading(false);
       return;
