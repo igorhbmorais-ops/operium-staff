@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, nome, email, categoria, user_id, empresa_id')
+        .select('id, nome, email, categoria, user_id, empresa_id, permissoes')
         .eq('auth_user_id', authUserId)
         .single();
 
@@ -76,6 +76,11 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function refreshColaborador() {
+    if (!user?.id) return;
+    await fetchColaborador(user.id);
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     localStorage.removeItem('sb-qoqvbxocoyhyjehictpc-auth-token');
@@ -84,7 +89,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, colaborador, loading, logout }}>
+    <AuthContext.Provider value={{ user, colaborador, loading, logout, refreshColaborador }}>
       {children}
     </AuthContext.Provider>
   );

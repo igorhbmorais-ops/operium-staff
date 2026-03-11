@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Receipt, Plus, X, Loader2 } from 'lucide-react';
+import { Receipt, Plus, X, Loader2, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 const CATEGORIAS = [
@@ -26,7 +27,8 @@ const ESTADO_LABEL = {
 };
 
 export default function Despesas() {
-  const { colaborador } = useAuth();
+  const { colaborador, refreshColaborador } = useAuth();
+  const navigate = useNavigate();
   const [despesas, setDespesas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -37,10 +39,19 @@ export default function Despesas() {
   const [categoria, setCategoria] = useState('transporte');
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
 
+  // Verificar permissão
+  const temPermissao = colaborador?.permissoes?.despesas === true;
+
+  // Re-fetch permissões ao abrir a página (detecta alterações do gestor)
+  useEffect(() => {
+    if (colaborador?.id) refreshColaborador();
+  }, []);
+
   useEffect(() => {
     if (!colaborador?.id) return;
+    if (!temPermissao) { setLoading(false); return; }
     fetchDespesas();
-  }, [colaborador?.id]);
+  }, [colaborador?.id, temPermissao]);
 
   async function fetchDespesas() {
     const { data } = await supabase
@@ -81,6 +92,24 @@ export default function Despesas() {
       await fetchDespesas();
     }
     setSubmitting(false);
+  }
+
+  if (!temPermissao) {
+    return (
+      <div className="p-4 pb-24 flex flex-col items-center justify-center text-center" style={{ minHeight: 'calc(100vh - 8rem)' }}>
+        <Lock size={48} className="text-gray-300 mb-4" />
+        <p className="text-lg font-semibold text-gray-700">Funcionalidade indisponível</p>
+        <p className="text-sm text-gray-400 mt-2 max-w-xs">
+          A submissão de despesas não está activa para a sua conta. Contacte o seu gestor se necessitar de acesso.
+        </p>
+        <button
+          onClick={() => navigate('/menu')}
+          className="mt-6 text-sm text-blue-600 font-medium hover:underline"
+        >
+          Voltar ao menu
+        </button>
+      </div>
+    );
   }
 
   return (
