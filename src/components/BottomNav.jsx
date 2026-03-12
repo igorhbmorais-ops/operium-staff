@@ -1,8 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Clock, CalendarDays, FolderOpen, Menu } from 'lucide-react';
+import { Home, Clock, CalendarDays, FolderOpen, Menu, Users } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-const tabs = [
+const baseTabs = [
   { path: '/', label: 'Início', icon: Home },
   { path: '/ponto', label: 'Ponto', icon: Clock },
   { path: '/ferias', label: 'Férias', icon: CalendarDays },
@@ -10,8 +11,18 @@ const tabs = [
   { path: '/menu', label: 'Menu', icon: Menu },
 ];
 
+const equipaTab = { path: '/equipa', label: 'Equipa', icon: Users };
+
 export default function BottomNav() {
   const location = useLocation();
+  const { colaborador } = useAuth();
+
+  // Mostrar tab Equipa se cargo nível ≤ 2 (gestão/dono)
+  const isGestor = colaborador?.cargo?.nivel != null && colaborador.cargo.nivel <= 2;
+
+  const tabs = isGestor
+    ? [baseTabs[0], baseTabs[1], equipaTab, baseTabs[3], baseTabs[4]]
+    : baseTabs;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 pb-[env(safe-area-inset-bottom)]">

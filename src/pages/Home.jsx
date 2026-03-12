@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone, X } from 'lucide-react';
+import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone, X, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ export default function Home() {
   const [horasFormacao, setHorasFormacao] = useState(0);
   const [proximoExame, setProximoExame] = useState(null);
   const [avisos, setAvisos] = useState([]);
+  const [pendenciasEquipa, setPendenciasEquipa] = useState(0);
   const [expandedAviso, setExpandedAviso] = useState(null);
   const [readAvisos, setReadAvisos] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('readAvisos') || '[]')); }
@@ -124,6 +125,44 @@ export default function Home() {
         setAvisos(filtered);
       });
   }, [colaborador?.id]);
+
+  // Pendências da equipa (só para gestores nível ≤ 2)
+  const isGestor = colaborador?.cargo?.nivel != null && colaborador.cargo.nivel <= 2;
+
+  useEffect(() => {
+    if (!isGestor || !colaborador?.cargo_id || !colaborador?.empresa_id) return;
+
+    (async () => {
+      // Buscar cargos subordinados
+      const { data: cargosFilho } = await supabase
+        .from('cargos')
+        .select('id')
+        .eq('superior_id', colaborador.cargo_id)
+        .eq('empresa_id', colaborador.empresa_id);
+
+      const cargoIds = (cargosFilho ?? []).map(c => c.id);
+      if (cargoIds.length === 0) return;
+
+      const { data: subs } = await supabase
+        .from('colaboradores')
+        .select('id')
+        .eq('empresa_id', colaborador.empresa_id)
+        .in('cargo_id', cargoIds)
+        .eq('activo', true);
+
+      const subIds = (subs ?? []).map(s => s.id);
+      if (subIds.length === 0) return;
+
+      const [ferRes, despRes] = await Promise.all([
+        supabase.from('pedidos_ferias').select('id', { count: 'exact', head: true })
+          .in('colaborador_id', subIds).eq('estado', 'pendente'),
+        supabase.from('despesas_colaborador').select('id', { count: 'exact', head: true })
+          .in('colaborador_id', subIds).eq('estado', 'pendente'),
+      ]);
+
+      setPendenciasEquipa((ferRes.count ?? 0) + (despRes.count ?? 0));
+    })();
+  }, [isGestor, colaborador?.cargo_id, colaborador?.empresa_id]);
 
   const emTurno = ultimoPonto?.tipo === 'entrada';
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -282,6 +321,25 @@ export default function Home() {
           </p>
         )}
       </div>
+
+      {/* Card Pendências Equipa (gestores) */}
+      {isGestor && pendenciasEquipa > 0 && (
+        <button
+          onClick={() => navigate('/equipa')}
+          className="w-full bg-white rounded-2xl border border-blue-200 shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-all active:scale-[0.99]"
+        >
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+            <Users size={20} className="text-blue-600" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-gray-800">Pendências da Equipa</p>
+            <p className="text-xs text-gray-500">{pendenciasEquipa} item{pendenciasEquipa !== 1 ? 's' : ''} por aprovar</p>
+          </div>
+          <span className="w-7 h-7 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {pendenciasEquipa > 9 ? '9+' : pendenciasEquipa}
+          </span>
+        </button>
+      )}
 
       {/* Grid 2×2 */}
       <div className="grid grid-cols-2 gap-3">

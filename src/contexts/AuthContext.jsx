@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, nome, email, categoria, user_id, empresa_id, permissoes')
+        .select('id, nome, email, categoria, user_id, empresa_id, permissoes, cargo_id')
         .eq('auth_user_id', authUserId)
         .single();
 
@@ -67,6 +67,15 @@ export function AuthProvider({ children }) {
         console.error('Colaborador não encontrado para auth_user_id:', authUserId);
         setColaborador(null);
       } else {
+        // Buscar cargo para determinar nível e permissões hierárquicas
+        if (data.cargo_id) {
+          const { data: cargo } = await supabase
+            .from('cargos')
+            .select('id, nome, nivel, permissoes')
+            .eq('id', data.cargo_id)
+            .single();
+          data.cargo = cargo || null;
+        }
         setColaborador(data);
       }
     } catch (err) {

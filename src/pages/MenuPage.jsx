@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight, BookOpen, Megaphone } from 'lucide-react';
+import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight, BookOpen, Megaphone, Users } from 'lucide-react';
 
 const sections = [
   {
@@ -11,6 +11,12 @@ const sections = [
       { label: 'Notificações', icon: Bell, path: '/notificacoes', desc: 'Alertas e avisos' },
       { label: 'Recibos', icon: Receipt, path: '/documentos', desc: 'Recibos de vencimento' },
       { label: 'Horário', icon: Clock, path: '/horario', desc: 'Horário de trabalho' },
+    ],
+  },
+  {
+    title: 'Gestão',
+    items: [
+      { label: 'Equipa', icon: Users, path: '/equipa', desc: 'Gerir subordinados, aprovar férias e despesas', gestor: true },
     ],
   },
   {
@@ -58,9 +64,12 @@ export default function MenuPage() {
       {/* Grouped sections */}
       {sections.map(({ title, items }) => {
         // Filtrar items por permissões
-        const visibleItems = items.filter(item =>
-          !item.perm || perms[item.perm] === true
-        );
+        const isGestor = colaborador?.cargo?.nivel != null && colaborador.cargo.nivel <= 2;
+        const visibleItems = items.filter(item => {
+          if (item.gestor && !isGestor) return false;
+          if (item.perm && perms[item.perm] !== true) return false;
+          return true;
+        });
         if (visibleItems.length === 0) return null;
         return (
           <div key={title}>

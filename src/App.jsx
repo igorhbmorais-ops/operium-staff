@@ -20,6 +20,7 @@ import Mensagens from '@/pages/Mensagens';
 import Denuncia from '@/pages/Denuncia';
 import Regulamento from '@/pages/Regulamento';
 import Avisos from '@/pages/Avisos';
+import Equipa from '@/pages/Equipa';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { Loader2 } from 'lucide-react';
 
@@ -61,6 +62,7 @@ function SecuredRoutes() {
         <Route path="/denuncia" element={<Denuncia />} />
         <Route path="/regulamento" element={<Regulamento />} />
         <Route path="/avisos" element={<Avisos />} />
+        <Route path="/equipa" element={<Equipa />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
