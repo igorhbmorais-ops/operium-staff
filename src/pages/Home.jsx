@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone, X, Users } from 'lucide-react';
+import { Clock, CalendarDays, GraduationCap, Stethoscope, Bell, ArrowRight, AlertTriangle, Megaphone, X, Users, ClipboardList } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +16,7 @@ export default function Home() {
   const [proximoExame, setProximoExame] = useState(null);
   const [avisos, setAvisos] = useState([]);
   const [pendenciasEquipa, setPendenciasEquipa] = useState(0);
+  const [avaliacoesPendentes, setAvaliacoesPendentes] = useState(0);
   const [expandedAviso, setExpandedAviso] = useState(null);
   const [readAvisos, setReadAvisos] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem('readAvisos') || '[]')); }
@@ -109,6 +110,14 @@ export default function Home() {
           setProximoExame(diff > 0 ? diff : null);
         }
       });
+
+    // Avaliacoes pendentes
+    supabase
+      .from('avaliacoes_360')
+      .select('id', { count: 'exact', head: true })
+      .eq('avaliador_id', colaborador.id)
+      .neq('estado', 'submetida')
+      .then(({ count }) => setAvaliacoesPendentes(count ?? 0));
 
     // Avisos recentes (últimos 5, publicados)
     supabase
@@ -337,6 +346,25 @@ export default function Home() {
           </div>
           <span className="w-7 h-7 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
             {pendenciasEquipa > 9 ? '9+' : pendenciasEquipa}
+          </span>
+        </button>
+      )}
+
+      {/* Card Avaliacoes Pendentes */}
+      {avaliacoesPendentes > 0 && (
+        <button
+          onClick={() => navigate('/avaliacoes')}
+          className="w-full bg-white rounded-2xl border border-purple-200 shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-all active:scale-[0.99]"
+        >
+          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+            <ClipboardList size={20} className="text-purple-600" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-gray-800">Avaliacoes Pendentes</p>
+            <p className="text-xs text-gray-500">{avaliacoesPendentes} avaliacao{avaliacoesPendentes !== 1 ? 'oes' : ''} por preencher</p>
+          </div>
+          <span className="w-7 h-7 bg-purple-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {avaliacoesPendentes > 9 ? '9+' : avaliacoesPendentes}
           </span>
         </button>
       )}

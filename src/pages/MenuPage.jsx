@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight, BookOpen, Megaphone, Users } from 'lucide-react';
+import { Bell, User, FileText, MessageSquare, Receipt, Clock, Shield, LogOut, ChevronRight, BookOpen, Megaphone, Users, ClipboardList } from 'lucide-react';
 
 const sections = [
   {
@@ -11,6 +11,7 @@ const sections = [
       { label: 'Notificações', icon: Bell, path: '/notificacoes', desc: 'Alertas e avisos' },
       { label: 'Recibos', icon: Receipt, path: '/documentos', desc: 'Recibos de vencimento' },
       { label: 'Horário', icon: Clock, path: '/horario', desc: 'Horário de trabalho' },
+      { label: 'Avaliacoes', icon: ClipboardList, path: '/avaliacoes', desc: 'Avaliacao 360 — auto e pares' },
     ],
   },
   {
