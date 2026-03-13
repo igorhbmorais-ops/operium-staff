@@ -4,12 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   User, CalendarDays, BarChart3, MessageSquare, GraduationCap,
   Stethoscope, Shield, Wallet, BookOpen, Clock, Settings, LogOut,
-  Users, X, ChevronRight,
+  Users, X, ChevronRight, FolderOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   { label: 'Perfil', icon: User, path: '/perfil' },
+  { label: 'Documentos', icon: FolderOpen, path: '/documentos' },
   { label: 'Férias', icon: CalendarDays, path: '/ferias' },
   { label: 'Avaliações', icon: BarChart3, path: '/avaliacoes' },
   { label: 'Mensagens', icon: MessageSquare, path: '/mensagens' },

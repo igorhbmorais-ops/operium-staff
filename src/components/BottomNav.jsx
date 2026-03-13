@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, FolderOpen, Menu } from 'lucide-react';
+import { Home, Clock, MessageSquare, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { path: '/', label: 'Início', icon: Home },
-  { path: '/documentos', label: 'Docs', icon: FolderOpen },
+  { path: '/horario', label: 'Horários', icon: Clock },
+  { path: '/mensagens', label: 'Mensagens', icon: MessageSquare },
   { path: '__menu__', label: 'Menu', icon: Menu },
 ];
 

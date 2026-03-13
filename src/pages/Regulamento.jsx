@@ -46,10 +46,10 @@ export default function Regulamento() {
 
     const { data: leituras } = await supabase
       .from('leituras_documentos')
-      .select('documento_id, lido_em')
+      .select('documento_id, confirmado_em')
       .eq('colaborador_id', colaborador.id);
 
-    const leiturasMap = new Map((leituras ?? []).map(l => [l.documento_id, l.lido_em]));
+    const leiturasMap = new Map((leituras ?? []).map(l => [l.documento_id, l.confirmado_em]));
 
     setDocumentos(docs.map(d => ({
       ...d,
