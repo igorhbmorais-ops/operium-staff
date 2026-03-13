@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
-  User, GraduationCap, Stethoscope, LogOut, Lock,
+  User, LogOut, Lock,
   Eye, EyeOff, Check, X, Loader2, Shield, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -138,33 +138,6 @@ function AlterarPassword() {
 
 export default function Perfil() {
   const { colaborador, user, logout } = useAuth();
-  const [formacoes, setFormacoes] = useState([]);
-  const [exames, setExames] = useState([]);
-
-  useEffect(() => {
-    if (!colaborador?.id) return;
-    fetchData();
-  }, [colaborador?.id]);
-
-  async function fetchData() {
-    const [formRes, examRes] = await Promise.all([
-      supabase
-        .from('formacao_sessoes')
-        .select('*')
-        .eq('colaborador_id', colaborador.id)
-        .order('data_inicio', { ascending: false })
-        .limit(5),
-      supabase
-        .from('medicina_trabalho')
-        .select('*')
-        .eq('colaborador_id', colaborador.id)
-        .order('data_exame', { ascending: false })
-        .limit(5),
-    ]);
-    setFormacoes(formRes.data ?? []);
-    setExames(examRes.data ?? []);
-  }
-
   return (
     <div className="p-4 pb-24 space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Perfil</h1>
@@ -190,52 +163,6 @@ export default function Perfil() {
 
       {/* Segurança — Alterar Password */}
       <AlterarPassword />
-
-      {/* Formações */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <GraduationCap size={18} className="text-blue-600" />
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Formações</h2>
-        </div>
-        {formacoes.length === 0 ? (
-          <p className="text-gray-400 text-sm">Sem formações registadas</p>
-        ) : (
-          <div className="space-y-2">
-            {formacoes.map(f => (
-              <div key={f.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">{f.titulo}</p>
-                  <p className="text-xs text-gray-400">{f.horas}h</p>
-                </div>
-                <span className="text-xs text-gray-500">{formatDate(f.data_inicio)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Exames Médicos */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Stethoscope size={18} className="text-green-600" />
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Exames Médicos</h2>
-        </div>
-        {exames.length === 0 ? (
-          <p className="text-gray-400 text-sm">Sem exames registados</p>
-        ) : (
-          <div className="space-y-2">
-            {exames.map(e => (
-              <div key={e.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 capitalize">{e.tipo_exame}</p>
-                  <p className="text-xs text-gray-400">{e.resultado ?? 'Pendente'}</p>
-                </div>
-                <span className="text-xs text-gray-500">{formatDate(e.data_exame)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Logout */}
       <button
