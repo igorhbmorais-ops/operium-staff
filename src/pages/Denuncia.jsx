@@ -39,6 +39,7 @@ export default function Denuncia() {
 
   // Form state
   const [tipo, setTipo] = useState('');
+  const [tipoOutro, setTipoOutro] = useState('');
   const [descricao, setDescricao] = useState('');
   const [dataIncidente, setDataIncidente] = useState('');
   const [envolvidos, setEnvolvidos] = useState('');
@@ -69,11 +70,13 @@ export default function Denuncia() {
     setLoading(true);
     const codigo = gerarCodigo();
 
+    const tipoFinal = tipo === 'outro' && tipoOutro.trim() ? tipoOutro.trim() : tipo;
+
     const { error } = await supabase.from('denuncias').insert({
       user_id: colaborador.user_id,
       empresa_id: colaborador.empresa_id,
       codigo,
-      tipo,
+      tipo: tipoFinal,
       descricao: descricao.trim(),
       data_incidente: dataIncidente || null,
       envolvidos: envolvidos.trim() || null,
@@ -88,6 +91,7 @@ export default function Denuncia() {
     } else {
       setCodigoGerado(codigo);
       setTipo('');
+      setTipoOutro('');
       setDescricao('');
       setDataIncidente('');
       setEnvolvidos('');
@@ -177,7 +181,7 @@ export default function Denuncia() {
           <label className="block text-xs text-gray-500 mb-1">Tipo de denúncia *</label>
           <select
             value={tipo}
-            onChange={e => setTipo(e.target.value)}
+            onChange={e => { setTipo(e.target.value); if (e.target.value !== 'outro') setTipoOutro(''); }}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
           >
@@ -186,6 +190,16 @@ export default function Denuncia() {
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
+          {tipo === 'outro' && (
+            <input
+              type="text"
+              value={tipoOutro}
+              onChange={e => setTipoOutro(e.target.value)}
+              placeholder="Especifique o tipo de denúncia..."
+              required
+              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          )}
         </div>
 
         {/* Descrição */}

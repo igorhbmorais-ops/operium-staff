@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getDeviceId, getDeviceLabel } from '@/lib/deviceId';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [colaborador, setColaborador] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deviceStatus, setDeviceStatus] = useState('checking'); // 'checking' | 'ok' | 'mismatch' | 'first'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -59,13 +61,14 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('colaboradores')
-        .select('id, nome, email, categoria, user_id, empresa_id, permissoes, cargo_id')
+        .select('id, nome, email, categoria, user_id, empresa_id, permissoes, cargo_id, device_id, device_nome, device_vinculado_em')
         .eq('auth_user_id', authUserId)
         .single();
 
       if (error || !data) {
         console.error('Colaborador não encontrado para auth_user_id:', authUserId);
         setColaborador(null);
+        setDeviceStatus('ok');
       } else {
         // Buscar cargo para determinar nível e permissões hierárquicas
         if (data.cargo_id) {
@@ -77,12 +80,49 @@ export function AuthProvider({ children }) {
           data.cargo = cargo || null;
         }
         setColaborador(data);
+
+        // Verificar device binding
+        await checkDeviceBinding(data);
       }
     } catch (err) {
       console.error('Erro ao buscar colaborador:', err);
+      setDeviceStatus('ok');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function checkDeviceBinding(colab) {
+    try {
+      const currentDeviceId = await getDeviceId();
+
+      if (!colab.device_id) {
+        // Primeiro login — vincular automaticamente
+        const deviceNome = getDeviceLabel();
+        await supabase
+          .from('colaboradores')
+          .update({
+            device_id: currentDeviceId,
+            device_nome: deviceNome,
+            device_vinculado_em: new Date().toISOString(),
+          })
+          .eq('id', colab.id);
+        setDeviceStatus('ok');
+      } else if (colab.device_id === currentDeviceId) {
+        setDeviceStatus('ok');
+      } else {
+        setDeviceStatus('mismatch');
+      }
+    } catch (err) {
+      console.error('Erro ao verificar device:', err);
+      setDeviceStatus('ok'); // fail-open
+    }
+  }
+
+  function setDeviceOk() {
+    setDeviceStatus('ok');
+    // Re-fetch para actualizar dados do colaborador
+    if (user?.id) fetchColaborador(user.id);
   }
 
   async function refreshColaborador() {
@@ -98,7 +138,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, colaborador, loading, logout, refreshColaborador }}>
+    <AuthContext.Provider value={{ user, colaborador, loading, logout, refreshColaborador, deviceStatus, setDeviceOk }}>
       {children}
     </AuthContext.Provider>
   );

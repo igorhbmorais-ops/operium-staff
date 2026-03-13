@@ -1,5 +1,5 @@
 // SecurityContext — Gate de segurança após login
-// Verifica: dispositivo vinculado + PIN definido
+// Verifica: dispositivo vinculado + PIN definido + device binding persistente
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import {
@@ -8,6 +8,8 @@ import {
   verificarPinExiste,
   obterConfigPonto,
 } from '@/lib/security';
+import { getDeviceId } from '@/lib/deviceId';
+import { supabase } from '@/lib/supabase';
 
 const SecurityContext = createContext(null);
 
@@ -28,10 +30,27 @@ export function SecurityProvider({ children }) {
 
   async function checkSecurity() {
     try {
+      // Verificar device binding persistente (colaboradores.device_id)
+      const currentDeviceId = await getDeviceId();
+      const { data: colabFresh } = await supabase
+        .from('colaboradores')
+        .select('device_id')
+        .eq('id', colaborador.id)
+        .single();
+
+      if (colabFresh?.device_id && colabFresh.device_id !== currentDeviceId) {
+        // Device foi alterado remotamente (ex: admin desvinculou) — forçar logout
+        await supabase.auth.signOut();
+        localStorage.removeItem('sb-qoqvbxocoyhyjehictpc-auth-token');
+        alert('Sessao terminada. Este dispositivo nao esta autorizado.');
+        window.location.reload();
+        return;
+      }
+
       // Buscar config do dono (user_id do colaborador)
       const config = await obterConfigPonto(colaborador.user_id);
 
-      // Verificar dispositivo
+      // Verificar dispositivo (staff_devices — legacy anti-fraude)
       let deviceOk = true;
       if (config.exigir_device_binding) {
         deviceOk = await verificarDispositivo(colaborador.id);

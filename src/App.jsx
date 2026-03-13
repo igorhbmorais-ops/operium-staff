@@ -22,6 +22,7 @@ import Regulamento from '@/pages/Regulamento';
 import Avisos from '@/pages/Avisos';
 import Equipa from '@/pages/Equipa';
 import Avaliacoes from '@/pages/Avaliacoes';
+import DeviceGate from '@/pages/DeviceGate';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { Loader2 } from 'lucide-react';
 
@@ -72,7 +73,7 @@ function SecuredRoutes() {
 }
 
 function AppRoutes() {
-  const { user, colaborador, loading } = useAuth();
+  const { user, colaborador, loading, deviceStatus, setDeviceOk, logout } = useAuth();
 
   if (loading) {
     return (
@@ -112,7 +113,26 @@ function AppRoutes() {
     );
   }
 
-  // Colaborador autenticado → gate de segurança
+  // Verificar device binding
+  if (deviceStatus === 'checking') {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (deviceStatus === 'mismatch') {
+    return (
+      <DeviceGate
+        colaboradorId={colaborador.id}
+        onSuccess={setDeviceOk}
+        onLogout={logout}
+      />
+    );
+  }
+
+  // Colaborador autenticado + dispositivo OK → gate de segurança
   return (
     <SecurityProvider>
       <SecuredRoutes />

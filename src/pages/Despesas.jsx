@@ -37,6 +37,7 @@ export default function Despesas() {
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
   const [categoria, setCategoria] = useState('transporte');
+  const [categoriaOutro, setCategoriaOutro] = useState('');
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
 
   // Verificar permissão
@@ -68,6 +69,7 @@ export default function Despesas() {
     setDescricao('');
     setValor('');
     setCategoria('transporte');
+    setCategoriaOutro('');
     setData(new Date().toISOString().slice(0, 10));
     setShowForm(false);
   }
@@ -83,7 +85,7 @@ export default function Despesas() {
       colaborador_id: colaborador.id,
       descricao: descricao.trim(),
       valor: parseFloat(valor),
-      categoria,
+      categoria: categoria === 'outro' && categoriaOutro.trim() ? categoriaOutro.trim() : categoria,
       data,
     });
 
@@ -185,13 +187,23 @@ export default function Despesas() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
             <select
               value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
+              onChange={(e) => { setCategoria(e.target.value); if (e.target.value !== 'outro') setCategoriaOutro(''); }}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {CATEGORIAS.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
+            {categoria === 'outro' && (
+              <input
+                type="text"
+                value={categoriaOutro}
+                onChange={(e) => setCategoriaOutro(e.target.value)}
+                placeholder="Especifique a categoria..."
+                required
+                className="w-full mt-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
           </div>
 
           <button
